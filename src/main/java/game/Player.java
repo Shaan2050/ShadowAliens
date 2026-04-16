@@ -1,7 +1,5 @@
 package game;
 
-
-
 import bagel.Image;
 import bagel.Input;
 import bagel.Keys;
@@ -36,7 +34,16 @@ public class Player{
         }
     }
 
-    public void draw(){
+    public void playerDraw(){
         playerImage.draw(x, y);
+    }
+
+    public void playerLivesDraw(String image, String position, int gap){
+        int x = Integer.parseInt(position.split(",")[0]);
+        int y = Integer.parseInt(position.split(",")[1]);
+        for(int i = 0; i < health; i++){
+            Image livesImage = new Image(image);
+            livesImage.draw(x + (i * gap), y);
+        }
     }
 }
