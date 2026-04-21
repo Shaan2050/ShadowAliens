@@ -12,6 +12,8 @@ import bagel.Input;
 public class ShadowAliens extends AbstractGame {
     private Player player;
     private Enemy[] enemy = new Enemy[10];
+    private static int index = 0;
+    private static int time = 0;
     private static Properties gameProps;
     public static double screenWidth;
     public static double screenHeight;
@@ -26,16 +28,23 @@ public class ShadowAliens extends AbstractGame {
         screenHeight = Integer.parseInt(gameProps.getProperty("window.height"));
 
         this.player = new Player(gameProps.getProperty("player.image"),
+                gameProps.getProperty("playerLives.image"),
                 screenWidth / 2,
                 Double.parseDouble(gameProps.getProperty("player.posY")),
                 Integer.parseInt(gameProps.getProperty("player.initialLives")),
                 Integer.parseInt(gameProps.getProperty("player.speed")));
 
-        for(int i = 0; i < 10; i++){
-            this.enemy[i] = new Enemy(gameProps.getProperty("enemy.image"),
-            Integer.parseInt(gameProps.getProperty("enemy." + i + ".arrivalTime")),
-            Integer.parseInt(gameProps.getProperty("enemy." + i + ".movementSpeed")),
-            Integer.parseInt(gameProps.getProperty("enemy." + i + ".posX")));
+        while(true){
+            String time = gameProps.getProperty("enemy." + index + ".arrivalTime");
+            if(time == null){
+                break;
+            }
+            this.enemy[index] = new Enemy(gameProps.getProperty("enemy.image"),
+            Integer.parseInt(time),
+            Integer.parseInt(gameProps.getProperty("enemy." + index + ".movementSpeed")),
+            Integer.parseInt(gameProps.getProperty("enemy." + index + ".posX")));
+
+            index++;
         }
     }
 
@@ -46,15 +55,28 @@ public class ShadowAliens extends AbstractGame {
      */
     @Override
     protected void update(Input input) {
+        time++;
         player.movement(input);
-        player.playerLivesDraw(gameProps.getProperty("playerLives.image"),
-                               gameProps.getProperty("playerLives.startPosition"),
+        player.playerLivesDraw(gameProps.getProperty("playerLives.startPosition"),
                                Integer.parseInt(gameProps.getProperty("playerLives.gap")));
 
-        for(Enemy e : enemy) {
-            e.drawEnemy();
-        }
+      
         player.playerDraw();
+        
+        
+        for(Enemy e : enemy) {
+            Collision playerEnemyCollision = new Collision(player, e);
+            e.update(time);
+            e.drawEnemy();
+            
+            if(e.isSpawned() && playerEnemyCollision.checkCollision(player, e)){
+                player.livesLost();
+                e.despawned();
+
+            }
+        }
+        
+        
     }
 
     public static void main(String[] args) {

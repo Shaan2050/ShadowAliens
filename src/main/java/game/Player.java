@@ -8,14 +8,16 @@ public class Player{
     private Image playerImage;
     //private static Image lives = new Image();
     private String playerIcon;
-    
+    private Image healthIcon;
+
     private int health;
     final private int speed;
     private double x;
     final private double y;
 
-    public Player(String playerIcon, double x, double y, int health, int speed){
+    public Player(String playerIcon, String healthIcon, double x, double y, int health, int speed){
         this.playerIcon = playerIcon;
+        this.healthIcon = new Image(healthIcon);
         this.x = x;
         this.y = y;
         
@@ -38,12 +40,27 @@ public class Player{
         playerImage.draw(x, y);
     }
 
-    public void playerLivesDraw(String image, String position, int gap){
+    public void playerLivesDraw(String position, int gap){
         int x = Integer.parseInt(position.split(",")[0]);
         int y = Integer.parseInt(position.split(",")[1]);
         for(int i = 0; i < health; i++){
-            Image livesImage = new Image(image);
-            livesImage.draw(x + (i * gap), y);
+            healthIcon.draw(x + (i * gap), y);
         }
+    }
+
+    public void livesLost(){
+        health--;
+    }
+
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public int getHealth() {
+        return health;
     }
 }
