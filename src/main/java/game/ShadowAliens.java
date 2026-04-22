@@ -1,19 +1,24 @@
 package game;
 
+import java.util.ArrayList;
 import java.util.Properties;
 
 import bagel.AbstractGame;
 import bagel.Input;
-
+import bagel.Keys;
 
 /**
  * Main game class that manages initialising the screens and game objects
  */
 public class ShadowAliens extends AbstractGame {
     private Player player;
+    private ArrayList<Projectile> projectile = new ArrayList<>();
     private Enemy[] enemy = new Enemy[10];
+
+    private static boolean shoot;
     private static int index = 0;
     private static int time = 0;
+
     private static Properties gameProps;
     public static double screenWidth;
     public static double screenHeight;
@@ -33,6 +38,7 @@ public class ShadowAliens extends AbstractGame {
                 Double.parseDouble(gameProps.getProperty("player.posY")),
                 Integer.parseInt(gameProps.getProperty("player.initialLives")),
                 Integer.parseInt(gameProps.getProperty("player.speed")));
+        
 
         while(true){
             String time = gameProps.getProperty("enemy." + index + ".arrivalTime");
@@ -75,6 +81,31 @@ public class ShadowAliens extends AbstractGame {
 
             }
         }
+
+        if (input.wasPressed(Keys.SPACE)) {
+            Projectile newProjectile = new Projectile(gameProps.getProperty("projectile.image"),
+                player.getX(),
+                player.getY(),
+                Integer.parseInt(gameProps.getProperty("projectile.movementSpeed")),
+                Integer.parseInt(gameProps.getProperty("player.shootCooldown"))
+                );
+
+            if(newProjectile.checkCooldown(time)){
+                projectile.add(newProjectile);
+            }
+        }
+            for(int i = projectile.size() - 1; i >= 0; i--){
+                Projectile p = projectile.get(i);
+                p.update();
+                if(p.despawned()){
+                    projectile.remove(i);
+                }
+            }
+
+            for(Projectile p : projectile){
+                p.draw();
+            }
+        
         
         
     }
