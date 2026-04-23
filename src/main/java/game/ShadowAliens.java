@@ -32,6 +32,9 @@ public class ShadowAliens extends AbstractGame {
         screenWidth = Integer.parseInt(gameProps.getProperty("window.width"));
         screenHeight = Integer.parseInt(gameProps.getProperty("window.height"));
 
+        Enemy.setExplosionProperties(gameProps.getProperty("explosion.image"),
+                                     Integer.parseInt(gameProps.getProperty("explosion.duration")));
+
         this.player = new Player(gameProps.getProperty("player.image"),
                 gameProps.getProperty("playerLives.image"),
                 screenWidth / 2,
@@ -71,19 +74,28 @@ public class ShadowAliens extends AbstractGame {
         
         
         for(Enemy e : enemy) {
-            Collision playerEnemyCollision = new Collision(player, e);
-            e.update(time);
-            e.drawEnemy();
-            
-            if(e.isSpawned() && playerEnemyCollision.checkCollision(player, e)){
-                player.livesLost();
-                e.despawned();
+            if(e.isExploding()) {
+                // Update explosion timer
+                e.updateExplosion(time);
+                e.drawEnemy();  // This will draw explosion
+            } else {
+
+                Collision playerEnemyCollision = new Collision(player, e);
+                e.update(time);
+                e.drawEnemy();
+                
+                if(e.isSpawned() && playerEnemyCollision.checkCollision(player, e)){
+                    player.livesLost();
+                    e.despawned();
+
+                }
 
             }
         }
 
         if (input.wasPressed(Keys.SPACE)) {
             Projectile newProjectile = new Projectile(gameProps.getProperty("projectile.image"),
+                //gameProps.getProperty("explosion.image"),
                 player.getX(),
                 player.getY(),
                 Integer.parseInt(gameProps.getProperty("projectile.movementSpeed")),
@@ -99,6 +111,23 @@ public class ShadowAliens extends AbstractGame {
                 p.update();
                 if(p.despawned()){
                     projectile.remove(i);
+                }
+            }
+
+            for(int i = projectile.size() - 1; i >= 0; i--){
+                Projectile p = projectile.get(i);
+                
+                for(Enemy e : enemy){
+                    if(e == null || !e.isSpawned() || e.isExploding()) continue;
+                    
+                    Collision projectileEnemyCollision = new Collision(p, e);
+                    
+                    if(projectileEnemyCollision.checkCollision(p, e)){
+                        e.triggerExplosion(time);
+                        projectile.remove(i);
+                        //p.explosion();
+                       //break;
+                    }
                 }
             }
 
