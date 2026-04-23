@@ -40,7 +40,11 @@ public class GameSpeed {
     }
     
     public void togglePause() {
-        gameState = (gameState == GameState.BATTLE) ? GameState.PAUSED : GameState.BATTLE;
+        if (gameState == GameState.BATTLE) {
+            gameState = GameState.PAUSED;
+        } else {
+    gameState = GameState.BATTLE;
+        }
     }
     
     public boolean isPaused() {
