@@ -33,6 +33,13 @@ public class GameResetter {
         this.explosionImage = explosionImage;
         this.explosionDuration = explosionDuration;
     }
+
+    public void addEnemy(int arrivalTime, int speed, int position) {
+        enemyArrivalTimes.add(arrivalTime);
+        enemySpeeds.add(speed);
+        enemyPositions.add(position);
+    }
+
     public Player resetPlayer() {
         return new Player(playerImage, playerLivesImage, screenWidth / 2, playerPosY, playerInitialLives, playerSpeed);
     }
