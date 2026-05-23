@@ -14,9 +14,13 @@ public class GameResetter {
     private String explosionImage;
     private int explosionDuration;
 
-    private final ArrayList<Integer> enemyArrivalTimes = new ArrayList<>();
-    private final ArrayList<Integer> enemySpeeds = new ArrayList<>();
-    private final ArrayList<Integer> enemyPositions = new ArrayList<>();
+    private final ArrayList<ArrayList<Integer>> enemyArrivalTimes = new ArrayList<>();
+    private final ArrayList<ArrayList<Integer>> enemySpeeds = new ArrayList<>();
+    private final ArrayList<ArrayList<String>> enemyTypes = new ArrayList<>();
+    private final ArrayList<ArrayList<Integer>> enemyPositions = new ArrayList<>();
+
+    private int currentWave = 1;
+    private int totalWaves = 0;
 
     public void setPlayerConfig(String image, String livesImage, double startX, 
                             double startY, int initialLives, int speed) {
@@ -28,32 +32,42 @@ public class GameResetter {
     this.playerSpeed = speed;
     }
 
+    public void addWave(){
+        enemyArrivalTimes.add(new ArrayList<>());
+        enemySpeeds.add(new ArrayList<>());
+        enemyTypes.add(new ArrayList<>());
+        enemyPositions.add(new ArrayList<>());
+        totalWaves++;
+    }
+
     public void setEnemyConfig(String image, String explosionImage, int explosionDuration) {
         this.enemyImage = image;
         this.explosionImage = explosionImage;
         this.explosionDuration = explosionDuration;
     }
 
-    public void addEnemy(int arrivalTime, int speed, int position) {
-        enemyArrivalTimes.add(arrivalTime);
-        enemySpeeds.add(speed);
-        enemyPositions.add(position);
+    public void addEnemy(int wave,int arrivalTime, String type, int speed, int position) {
+        enemyArrivalTimes.get(wave).add(arrivalTime);
+        enemyTypes.get(wave).add(type);
+        enemySpeeds.get(wave).add(speed);
+        enemyPositions.get(wave).add(position);
     }
 
     public Player resetPlayer() {
         return new Player(playerImage, playerLivesImage, screenWidth / 2, playerPosY, playerInitialLives, playerSpeed);
     }
 
-    public Enemy[] resetEnemies() {
-        int count = enemyArrivalTimes.size();
+    public Enemy[] resetEnemies(int wave) {
+        int count = enemyArrivalTimes.get(wave).size();
         Enemy[] enemies = new Enemy[count];
         
         for (int i = 0; i < count; i++) {
             enemies[i] = new Enemy(
                 enemyImage,
-                enemyArrivalTimes.get(i),
-                enemySpeeds.get(i),
-                enemyPositions.get(i)
+                enemyTypes.get(wave).get(i),
+                enemyArrivalTimes.get(wave).get(i),
+                enemySpeeds.get(wave).get(i),
+                enemyPositions.get(wave).get(i)
             );
         }
         
@@ -65,6 +79,7 @@ public class GameResetter {
         enemyArrivalTimes.clear();
         enemySpeeds.clear();
         enemyPositions.clear();
+        enemyTypes.clear();
     }
     
 }

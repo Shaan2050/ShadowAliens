@@ -56,6 +56,10 @@ public class Player{
         return x;
     }
 
+    public void setX(double x) {
+        this.x = x;
+    }
+
     public double getY() {
         return y;
     }

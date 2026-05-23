@@ -9,6 +9,6 @@ public class StartScreen extends Screen {
     @Override
     public void draw(double screenWidth) {
         drawTitle(screenWidth);
-        drawInstructionsList();
+        drawControlsList();
     }
 }

@@ -22,6 +22,10 @@ public class ShadowAliens extends AbstractGame {
     private GameSpeed gameSpeed;
     private InvincibleMode invincibleMode;
     private GameResetter gameResetter;
+
+    private ScreenManager screenManager;
+    private StartScreen startScreen;
+    private EndScreen endScreen;
     private PauseScreen pauseScreen;
     
     private final Font uiFont;
@@ -34,6 +38,8 @@ public class ShadowAliens extends AbstractGame {
 
     private static int time = 0;
     private double accumulatedTime = 0;
+
+    private int currentWave = 1;
     
     private static Properties gameProps;
     public static double screenWidth;
@@ -78,6 +84,26 @@ public class ShadowAliens extends AbstractGame {
         this.scoreX = Double.parseDouble(scorePos[0]);
         this.scoreY = Double.parseDouble(scorePos[1]);
         
+        //Start Screen
+         String fontFile = gameProps.getProperty("font.file");
+        int fontSize = Integer.parseInt(gameProps.getProperty("font.size"));
+        
+
+        // Create and configure StartScreen
+        StartScreen startScreen = new StartScreen(fontFile, textColor);
+        startScreen.setTitleConfig(
+            gameProps.getProperty("start.title.text"),
+            Integer.parseInt(gameProps.getProperty("start.title.size")),
+            Double.parseDouble(gameProps.getProperty("start.title.posY"))
+        );
+        startScreen.setControlsConfig(
+            gameProps.getProperty("start.instructionsList.text"),
+            Double.parseDouble(gameProps.getProperty("start.instructionsList.startPosY")),
+            Double.parseDouble(gameProps.getProperty("start.instructionsList.rowGap"))
+        );
+        startScreen.setFontSize(fontSize);
+        screenManager.setStartScreen(startScreen);
+
         // Initialize components
         this.gameSpeed = new GameSpeed();
         this.invincibleMode = new InvincibleMode();
@@ -102,11 +128,11 @@ public class ShadowAliens extends AbstractGame {
         loadEnemies();
         
         // Setup PauseScreen
-        this.pauseScreen = new PauseScreen();
+        ScreenManager screenManager = new ScreenManager((int) screenWidth);
+        PauseScreen pauseScreen = new PauseScreen(fontFile, textColor);
         pauseScreen.setTitleConfig(
-            gameProps.getProperty("text.font"),
-            Integer.parseInt(gameProps.getProperty("pausedTitle.size")),
             gameProps.getProperty("pausedTitle.text"),
+            Integer.parseInt(gameProps.getProperty("pausedTitle.size")),
             Double.parseDouble(gameProps.getProperty("pausedTitle.posY"))
         );
         pauseScreen.setControlsConfig(
@@ -118,24 +144,36 @@ public class ShadowAliens extends AbstractGame {
             gameProps.getProperty("timescale.text"),
             gameProps.getProperty("timescale.pos")
         );
+        pauseScreen.setFontSize(fontSize);
+        screenManager.setPauseScreen(pauseScreen);
         
         // Initialize game objects using GameResetter
         this.player = gameResetter.resetPlayer();
-        this.enemy = gameResetter.resetEnemies();
+        this.enemy = gameResetter.resetEnemies(currentWave);
     }
     
     private void loadEnemies() {
-        int index = 0;
+        int wave = 1;
+        
         while (true) {
-            String time = gameProps.getProperty("enemy." + index + ".arrivalTime");
-            if (time == null) break;
-            
-            gameResetter.addEnemy(
-                Integer.parseInt(time),
-                Integer.parseInt(gameProps.getProperty("enemy." + index + ".movementSpeed")),
-                Integer.parseInt(gameProps.getProperty("enemy." + index + ".posX"))
-            );
-            index++;
+            String firstEnemyTime = gameProps.getProperty("wave." + wave + ".enemy.0.arrivalTime");
+            if(firstEnemyTime == null) break;
+            gameResetter.addWave(); // Start with wave 1
+
+            int index = 0;
+            while(true){
+                String time = gameProps.getProperty("wave." + wave + ".enemy." + index + ".arrivalTime");
+                if(time == null) break;
+                gameResetter.addEnemy(
+                    wave,
+                    Integer.parseInt(time),
+                    gameProps.getProperty("wave." + wave + ".enemy." + index + ".type"),
+                    Integer.parseInt(gameProps.getProperty("wave." + wave + ".enemy." + index + ".movementSpeed")),
+                    Integer.parseInt(gameProps.getProperty("wave." + wave + ".enemy." + index + ".posX"))
+                );
+                index++;
+            }
+            wave++;
         }
     }
     
@@ -146,7 +184,7 @@ public class ShadowAliens extends AbstractGame {
         invincibleMode.reset();
         player = gameResetter.resetPlayer();
         projectile.clear();
-        enemy = gameResetter.resetEnemies();
+        enemy = gameResetter.resetEnemies(currentWave);
     }
 
     /**
@@ -166,7 +204,8 @@ public class ShadowAliens extends AbstractGame {
         if (gameSpeed.isPaused()) {
             drawGameState();
             drawUI();
-            pauseScreen.draw(screenWidth, gameSpeed.getTimeScale());
+            pauseScreen.updateTimescale(gameSpeed.getTimeScale());
+            pauseScreen.draw(screenWidth);
             return;
         }
         
@@ -207,6 +246,13 @@ public class ShadowAliens extends AbstractGame {
         player.movement(input);
         player.playerLivesDraw(gameProps.getProperty("playerLives.startPosition"),
                                Integer.parseInt(gameProps.getProperty("playerLives.gap")));
+
+        // bounds for the player
+        if(player.getX() < 0){
+            player.setX(0);
+        }else if(player.getX() > screenWidth){
+            player.setX(screenWidth);
+        }
         player.playerDraw();
         
         // Update enemies
@@ -215,11 +261,11 @@ public class ShadowAliens extends AbstractGame {
             
             if (e.isExploding()) {
                 e.updateExplosion(time);
-                e.drawEnemy();
+                e.draw();
             } else {
                 Collision playerEnemyCollision = new Collision(player, e);
                 e.update(time);
-                e.drawEnemy();
+                e.draw();
                 
                 if (e.isSpawned() && playerEnemyCollision.checkCollision(player, e)) {
                     if (!invincibleMode.isActive()) {
@@ -281,7 +327,7 @@ public class ShadowAliens extends AbstractGame {
         );
         
         for (Enemy e : enemy) {
-            if (e != null) e.drawEnemy();
+            if (e != null) e.draw();
         }
         
         for (Projectile p : projectile) {

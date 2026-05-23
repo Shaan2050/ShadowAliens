@@ -2,25 +2,18 @@ package game;
 
 import bagel.Image;
 
-public class Enemy{
-    private final Image enemyImage;
+public class Enemy extends NonPlayerEntity {
     public static Image explosionImage;
-    private final int spawnTime;
-    private final int speed;
-    private int x;
-    private int y = 0;
-
-    private boolean isSpawned = false;
-    private boolean arrival = true;
+    private final String type;
     private boolean explosion = false;
     private int explosionStart;
     public static int explosionDuration;
 
-    public Enemy(String image, int Time, int speed, int x) {
-        this.enemyImage = new Image(image);
-        this.spawnTime = Time;
-        this.speed = speed;
-        this.x = x;
+    public Enemy(String image, String type, int Time, int speed, int x) {
+        super(image, Time, speed);
+        this.type = type.toUpperCase();
+        super.x = x;
+        super.y = 0;
     }
 
     public static void setExplosionProperties(String imagePath, int duration) {
@@ -32,42 +25,37 @@ public class Enemy{
         explosion = true;
         explosionStart = time;
         isSpawned = false;
-        arrival = false;
+        active = false;
     }
 
     public boolean isExploding(){
         return explosion;
     }
 
-    public void update(int frameCount){
-        if(frameCount >= spawnTime){
-            isSpawned = true;
-        }
-        if(isSpawned && arrival){
-            y += speed;
-        }
-    }
+    
 
     public void updateExplosion(int time){
         if(explosionStart + explosionDuration <= time){
             explosion = false;
-            arrival = false;
+            active = false;
         }
     }
 
+    @Override
     public void despawned() {
-        arrival = false;
+        active = false;
         y = -100;
     }
 
     public boolean isSpawned() {
-        return isSpawned && arrival;
+        return isSpawned && active;
     }
 
-    public void drawEnemy(){
+    @Override
+    public void draw(){
         drawExplosion();
-        if(isSpawned && arrival){
-            enemyImage.draw(x, y);
+        if(isSpawned && active){
+            image.drawFromTopLeft(x, y);
         }
     }
 
@@ -77,11 +65,11 @@ public class Enemy{
         }
     }
 
-    public int getX() {
+    public double getX() {
         return x;
     }
 
-    public int getY() {
+    public double getY() {
         return y;
     }
 

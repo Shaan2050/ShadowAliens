@@ -27,7 +27,7 @@ public abstract class Screen {
         this.size = size;
     }
 
-    public void setInstructionsConfig(String instructionsList, double startPos, double rowGap) {
+    public void setControlsConfig(String instructionsList, double startPos, double rowGap) {
         this.instructionsText = instructionsList.split(",");
         this.instructionsStartPos = startPos;
         this.instructionsRowGap = rowGap;
@@ -43,7 +43,7 @@ public abstract class Screen {
         font.drawString(text, posX, posY, textColor);
     }
 
-    protected void drawInstructionsList(){
+    protected void drawControlsList(){
         for (int i = 0; i < instructionsText.length; i++) {
             drawCenteredText(instructionsText[i], instructionsStartPos + (i * instructionsRowGap), font.getWidth(instructionsText[i]));
         }
