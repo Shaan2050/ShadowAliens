@@ -9,6 +9,7 @@ public class ScreenManager {
     }
     
     private GameState currentState;
+    private BattleScreen battleScreen;
     private StartScreen startScreen;
     private EndScreen endScreen;
     private PauseScreen pauseScreen;
@@ -17,6 +18,10 @@ public class ScreenManager {
     public ScreenManager(int screenWidth) {
         this.screenWidth = screenWidth;
         this.currentState = GameState.START;
+    }
+
+    public void setBattleScreen(BattleScreen battleScreen) {
+        this.battleScreen = battleScreen;
     }
 
     public void setStartScreen(StartScreen startScreen) {
@@ -30,9 +35,8 @@ public class ScreenManager {
     public void setPauseScreen(PauseScreen pauseScreen) {
         this.pauseScreen = pauseScreen;
     }
-     public void setState(GameState state) { this.currentState = state; }
+    
     public GameState getState() { return currentState; }
-    public boolean isState(GameState state) { return currentState == state; }
     
     // Transitions
     public void startBattle() { currentState = GameState.BATTLE; }

@@ -51,6 +51,9 @@ public class Player{
     public void livesLost(){
         health--;
     }
+    public void addLife(){
+        health++;
+    }
 
     public double getX() {
         return x;

@@ -22,6 +22,10 @@ public abstract class NonPlayerEntity {
     public abstract void despawned();
     public abstract void draw();
 
+    public boolean isSpawned() {
+        return isSpawned && active;
+    }
+
     public void update(int frameCount) {
         if(frameCount >= spawnTime){
             isSpawned = true;

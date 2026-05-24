@@ -6,8 +6,8 @@ public class Projectile{
     private final Image projectileImage;
     //private final Image explosionImage;
     private final double x;
-    private double y;
-    private final int speed;
+    protected double y;
+    protected int speed;
     private final int cooldown;
     private static int shootTime = -10;
 
