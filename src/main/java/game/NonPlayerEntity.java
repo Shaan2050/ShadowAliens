@@ -22,6 +22,10 @@ public abstract class NonPlayerEntity {
     public abstract void despawned();
     public abstract void draw();
 
+    public boolean isActive() {
+        return active;
+    }
+
     public boolean isSpawned() {
         return isSpawned && active;
     }
@@ -33,5 +37,8 @@ public abstract class NonPlayerEntity {
         if(isSpawned && active){
             y += speed;
         }
+    }
+    public int getSpawnTime() {
+        return spawnTime;
     }
 }

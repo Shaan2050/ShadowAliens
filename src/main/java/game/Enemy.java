@@ -12,6 +12,8 @@ public class Enemy extends NonPlayerEntity {
     private int explosionStart;
     public static int explosionDuration;
     private int projectileSpeed;
+    private boolean wasSpawned = false;
+
 
      // For strafing enemies
     private double xDirection = 0; // -1 for left, 1 for right
@@ -21,6 +23,9 @@ public class Enemy extends NonPlayerEntity {
     private int lastShotTime = -1;
     private static int shootingFireRate = 0;
     private ArrayList<EnemyProjectile> projectiles = new ArrayList<>();
+
+    private static String staticProjectileImage;
+    private static int staticProjectileSpeed;
 
     public Enemy(String image, String type, int Time, int speed, int x) {
         super(image, Time, speed);
@@ -137,13 +142,13 @@ public class Enemy extends NonPlayerEntity {
     }
     
 
-    public void setProjectile(String imagePath, int speed) {
-        this.projectileImage = imagePath;
-        this.projectileSpeed = speed;
+    public static void setProjectile(String imagePath, int speed) {
+        staticProjectileImage = imagePath;
+        staticProjectileSpeed = speed;
     }
     private void fireProjectile(){
-        EnemyProjectile newProjectile = new EnemyProjectile(projectileImage, x, y);
-        newProjectile.setMovementSpeed(projectileSpeed);
+        EnemyProjectile newProjectile = new EnemyProjectile(staticProjectileImage, x, y);
+        newProjectile.setMovementSpeed(staticProjectileSpeed);
         projectiles.add(newProjectile);
     }
     
@@ -184,6 +189,10 @@ public class Enemy extends NonPlayerEntity {
 
     public void clearProjectiles() {
         projectiles.clear();
+    }
+
+    public boolean wasSpawnedLastFrame() {
+        return wasSpawned;
     }
 
 }

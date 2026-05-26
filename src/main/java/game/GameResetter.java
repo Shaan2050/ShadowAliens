@@ -11,6 +11,7 @@ public class GameResetter {
     private int playerInitialLives;
     private int playerSpeed;
     private int playerHitInvincibilityTime;
+    private int waveIndex;
     
     private String regularEnemyImage;
     private String strafingEnemyImage;
@@ -122,16 +123,18 @@ public class GameResetter {
     }
  
     public void addEnemy(int wave, int arrivalTime, String type, int speed, int position) {
-        enemyArrivalTimes.get(wave).add(arrivalTime);
-        enemyTypes.get(wave).add(type);
-        enemySpeeds.get(wave).add(speed);
-        enemyPositions.get(wave).add(position);
+        this.waveIndex = wave - 1; // Convert to 0-based index
+        enemyArrivalTimes.get(waveIndex).add(arrivalTime);
+        enemyTypes.get(waveIndex).add(type);
+        enemySpeeds.get(waveIndex).add(speed);
+        enemyPositions.get(waveIndex).add(position);
     }
     
     public void addPowerup(int wave, int arrivalTime, String type, int position) {
-        powerupArrivalTimes.get(wave).add(arrivalTime);
-        powerupTypes.get(wave).add(type);
-        powerupPositions.get(wave).add(position);
+        this.waveIndex = wave - 1; // Convert to 0-based index
+        powerupArrivalTimes.get(waveIndex).add(arrivalTime);
+        powerupTypes.get(waveIndex).add(type);
+        powerupPositions.get(waveIndex).add(position);
     }
  
     public Player resetPlayer() {
@@ -140,22 +143,24 @@ public class GameResetter {
     }
  
     public Enemy[] resetEnemies(int wave) {
-        int count = enemyArrivalTimes.get(wave).size();
+        this.waveIndex = wave - 1; // Convert to 0-based index
+        int count = enemyArrivalTimes.get(waveIndex).size();
         Enemy[] enemies = new Enemy[count];
         
         for (int i = 0; i < count; i++) {
             enemies[i] = new Enemy(
-                getEnemyImage(enemyTypes.get(wave).get(i)),
-                enemyTypes.get(wave).get(i),
-                enemyArrivalTimes.get(wave).get(i),
-                enemySpeeds.get(wave).get(i),
-                enemyPositions.get(wave).get(i)
+                getEnemyImage(enemyTypes.get(waveIndex).get(i)),
+                enemyTypes.get(waveIndex).get(i),
+                enemyArrivalTimes.get(waveIndex).get(i),
+                enemySpeeds.get(waveIndex).get(i),
+                enemyPositions.get(waveIndex).get(i)
             );
         }
         
-        /* Enemy.setExplosionProperties(explosionLargeImage, explosionLargeDuration);
+        Enemy.setExplosionProperties(explosionLargeImage, explosionLargeDuration);
         Enemy.setShootingFireRate(enemyShootingFireRate);
-        EnemyProjectile.setMovementSpeed(enemyProjectileSpeed); */
+        EnemyProjectile.setMovementSpeed(enemyProjectileSpeed);
+        Enemy.setProjectile(enemyProjectileImage, enemyProjectileSpeed);
         
         return enemies;
     }

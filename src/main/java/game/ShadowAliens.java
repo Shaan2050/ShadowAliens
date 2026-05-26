@@ -17,6 +17,9 @@ public class ShadowAliens extends AbstractGame {
     private static final int PLAYER_BOUND_WIDTH = 50;
     private static final int PLAYER_BOUND_HEIGHT = 50;
 
+    private int enemiesSpawnedThisWave = 0;
+    private int totalEnemiesThisWave = 0;
+
     private Player player;
     private PlayerState playerState;
     private ArrayList<Projectile> playerProjectiles = new ArrayList<>();
@@ -55,6 +58,8 @@ public class ShadowAliens extends AbstractGame {
     private static int time = 0;
     private double accumulatedTime = 0;
     private boolean inWave = false;
+    private boolean waveStarted = false;
+
 
     private int currentWave = 1;
     
@@ -221,7 +226,10 @@ public class ShadowAliens extends AbstractGame {
         
         // Initialize game objects using GameResetter
         this.player = gameResetter.resetPlayer();
-        this.enemy = gameResetter.resetEnemies(currentWave - 1);
+        this.enemy = gameResetter.resetEnemies(1);
+        totalEnemiesThisWave = enemy.length;
+        enemiesSpawnedThisWave = 0;
+
         Powerups[] wavePowerups = gameResetter.resetPowerups(currentWave);
         for (Powerups p : wavePowerups) {
             powerUps.add(p);
@@ -253,7 +261,7 @@ public class ShadowAliens extends AbstractGame {
                 Double.parseDouble(gameProps.getProperty("end.instructionsList.rowGap"))
             );
     
-        this.endScreen.setFontSize(Integer.parseInt(gameProps.getProperty("font.size")));
+        this.endScreen.setFontSize(Integer.parseInt(gameProps.getProperty("text.size")));
         screenManager.setEndScreen(endScreen);
         screenManager.endGame();
     }
@@ -271,7 +279,7 @@ public class ShadowAliens extends AbstractGame {
                 String time = gameProps.getProperty("wave." + wave + ".enemy." + index + ".arrivalTime");
                 if(time == null) break;
                 gameResetter.addEnemy(
-                    wave - 1,
+                    wave ,
                     Integer.parseInt(time),
                     gameProps.getProperty("wave." + wave + ".enemy." + index + ".type"),
                     Integer.parseInt(gameProps.getProperty("wave." + wave + ".enemy." + index + ".movementSpeed")),
@@ -286,7 +294,7 @@ public class ShadowAliens extends AbstractGame {
                 if(type == null) break;
                 
                 gameResetter.addPowerup(
-                    wave - 1,
+                    wave,
                     Integer.parseInt(gameProps.getProperty("wave." + wave + ".powerup." + powerupIndex + ".arrivalTime")),
                     type,
                     Integer.parseInt(gameProps.getProperty("wave." + wave + ".powerup." + powerupIndex + ".posX"))
@@ -307,6 +315,11 @@ public class ShadowAliens extends AbstractGame {
         gameSpeed.reset();
         invincibleMode.reset();
         playerState.reset();
+
+        totalEnemiesThisWave = 0;
+        enemiesSpawnedThisWave = 0;
+        waveStarted = false;
+
         
         // Clear old entities
         playerProjectiles.clear();
@@ -315,7 +328,7 @@ public class ShadowAliens extends AbstractGame {
         
         // Reset player and enemies
         player = gameResetter.resetPlayer();
-        enemy = gameResetter.resetEnemies(currentWave - 1);
+        enemy = gameResetter.resetEnemies(currentWave);
 
         Powerups[] wavePowerups = gameResetter.resetPowerups(currentWave);
         for (Powerups p : wavePowerups) {
@@ -418,21 +431,39 @@ public class ShadowAliens extends AbstractGame {
         }
         
          // Check win condition (all waves completed)
-        if (allEnemiesAndProjectilesDestroyed() && inWave && currentWave >= gameResetter.getTotalWaves()) {
-            inWave = false;
-            endScreenSetup(true);
-            gameState = GameState.END;
+        if (allEnemiesAndProjectilesDestroyed() && inWave && waveStarted) {
+        inWave = false;
+        waveStarted = false;
+        score += Integer.parseInt(gameProps.getProperty("score.waveCompleted"));
+        
+            if (currentWave < gameResetter.getTotalWaves()) {
+                currentWave++;
+                enemy = gameResetter.resetEnemies(currentWave);
+                powerUps.clear();
+                Powerups[] wavePowerups = gameResetter.resetPowerups(currentWave);
+                for (Powerups p : wavePowerups) {
+                    powerUps.add(p);
+                }
+                playerProjectiles.clear();
+                enemyProjectiles.clear();
+                battleScreen.setCurrentWave(currentWave);
+                inWave = true;
+            } else {
+                endScreenSetup(true);
+                gameState = GameState.END;
+            }
             return;
         }
         
-        // Check if wave is complete
-        if (allEnemiesAndProjectilesDestroyed() && inWave) {
+        
+        /* // Check if wave is complete
+        if (allEnemiesAndProjectilesDestroyed() && inWave && time > 0) {
             inWave = false;
             score += Integer.parseInt(gameProps.getProperty("score.waveCompleted"));
             
             if (currentWave < gameResetter.getTotalWaves()) {
                 currentWave++;
-                enemy = gameResetter.resetEnemies(currentWave - 1);
+                enemy = gameResetter.resetEnemies(currentWave);
                 powerUps.clear();
 
                 Powerups[] wavePowerups = gameResetter.resetPowerups(currentWave);
@@ -445,7 +476,7 @@ public class ShadowAliens extends AbstractGame {
                 inWave = true;
             }
             return;
-        }
+        } */
         
         // Pause toggle
         if (input.wasPressed(Keys.ESCAPE)) {
@@ -554,7 +585,7 @@ public class ShadowAliens extends AbstractGame {
         // Move to next wave
         if (currentWave < gameResetter.getTotalWaves()) {
             currentWave++;
-            enemy = gameResetter.resetEnemies(currentWave - 1);
+            enemy = gameResetter.resetEnemies(currentWave);
 
             Powerups[] wavePowerups = gameResetter.resetPowerups(currentWave);
             for (Powerups p : wavePowerups) {
@@ -583,7 +614,20 @@ public class ShadowAliens extends AbstractGame {
         // Update enemies
         for (Enemy e : enemy) {
             if (e == null) continue;
+            e.update(time);
             
+
+            if (e.isSpawned() && e.getY() > screenHeight) {
+                e.despawned();
+            }
+            // Track when first enemy spawns
+            if (e.isSpawned() && !waveStarted) {
+                waveStarted = true;
+            }
+    
+            if (!e.wasSpawnedLastFrame() && e.isSpawned()) {
+            enemiesSpawnedThisWave++;
+            }
             if (e.isExploding()) {
                 e.updateExplosion(time);
                 e.draw();
@@ -603,8 +647,6 @@ public class ShadowAliens extends AbstractGame {
                 if (e.getType().equals("SHOOTING")) {
                     e.updateProjectiles(time);
                     // Add enemy projectiles to the main list
-                    enemyProjectiles.addAll(e.getProjectiles());
-                    e.clearProjectiles();  // Clear after transferring
                 }
             }
         }
@@ -653,6 +695,14 @@ public class ShadowAliens extends AbstractGame {
             
             if (newProjectile.checkCooldown(time)) {
                 playerProjectiles.add(newProjectile);
+            }
+        }
+
+        // Rebuild enemyProjectiles list from all active enemies
+        enemyProjectiles.clear();
+        for (Enemy e : enemy) {
+            if (e != null && e.isActive() && e.isSpawned()) {
+                enemyProjectiles.addAll(e.getProjectiles());
             }
         }
         
@@ -746,26 +796,46 @@ public class ShadowAliens extends AbstractGame {
     }
  
     private boolean allEnemiesAndProjectilesDestroyed() {
-        // Check enemies
+        if (!waveStarted) return false;
+
+        // All enemies must be off-screen or destroyed
         for (Enemy e : enemy) {
-            if (e != null && e.isSpawned() && !e.isExploding()) {
+            if (e == null) continue;
+            if (e.isSpawned() && !e.isExploding() && e.isActive()) {
                 return false;
             }
         }
-        
-        // Check enemy projectiles
+
+        // All power‑ups must have been collected or left the screen
+        if (!powerUps.isEmpty()) {
+            return false;
+        }
+
+        // All enemy projectiles must be gone
         if (!enemyProjectiles.isEmpty()) {
             return false;
         }
-        
-        // Check powerups
-        for (Powerups p : powerUps) {
-            if (p.isSpawned() && !p.isCollected()) {
-                return false;
-            }
-        }
-        
+
         return true;
+    }
+
+    private void loadWave(int waveNum) {
+        currentWave = waveNum;
+        waveStarted = false;
+
+        enemy = gameResetter.resetEnemies(currentWave);
+        totalEnemiesThisWave = enemy.length;
+        enemiesSpawnedThisWave = 0;
+        
+        powerUps.clear();
+        Powerups[] wavePowerups = gameResetter.resetPowerups(currentWave);
+        for (Powerups p : wavePowerups) {
+            powerUps.add(p);
+        }
+        playerProjectiles.clear();
+        enemyProjectiles.clear();
+        battleScreen.setCurrentWave(currentWave);
+        inWave = true;
     }
     
     private void drawGameState() {

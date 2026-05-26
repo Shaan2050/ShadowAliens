@@ -6,8 +6,10 @@ public class EnemyProjectile extends Projectile{
         super(image, x, y, 1, 0);
     }
 
-    public boolean despawned(int screenHeight){
-        return getY() > screenHeight; // Assuming screen height is 800
+    @Override
+    public boolean despawned() {
+        // Projectile leaves the screen when it passes the bottom edge
+        return super.y > ShadowAliens.screenHeight;
     }
 
     public static void setMovementSpeed(int speed){
