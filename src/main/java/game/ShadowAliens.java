@@ -6,6 +6,7 @@ import java.util.Properties;
 import bagel.AbstractGame;
 import bagel.DrawOptions;
 import bagel.Font;
+import bagel.Image;
 import bagel.Input;
 import bagel.Keys;
 import bagel.Window;
@@ -14,11 +15,18 @@ import bagel.Window;
  * Main game class that manages initialising the screens and game objects
  */
 public class ShadowAliens extends AbstractGame {
+    private final Image invincibilityImage;
+
     private static final int PLAYER_BOUND_WIDTH = 50;
     private static final int PLAYER_BOUND_HEIGHT = 50;
 
+    private static final double TICKS_PER_SECOND = 60.0;
+    private double accumulator = 0.0;
+    private long lastUpdateTime = System.nanoTime();
+
     private int enemiesSpawnedThisWave = 0;
     private int totalEnemiesThisWave = 0;
+    private int waveStartTime = 0;
 
     private Player player;
     private PlayerState playerState;
@@ -28,8 +36,7 @@ public class ShadowAliens extends AbstractGame {
     private Enemy[] enemy;
     
     // New components
-    private final GameSpeed gameSpeed;
-    private final InvincibleMode invincibleMode;
+    private final GameSpeed gameSpeed; 
     private final GameResetter gameResetter;
 
     private ScreenManager screenManager;
@@ -73,6 +80,7 @@ public class ShadowAliens extends AbstractGame {
                 "Shadow Aliens");
 
         this.gameState = GameState.START;
+        this.invincibilityImage = new Image(gameProps.getProperty("invincibility.image"));
 
         ShadowAliens.gameProps = gameProps;
         screenWidth = Integer.parseInt(gameProps.getProperty("window.width"));
@@ -94,7 +102,6 @@ public class ShadowAliens extends AbstractGame {
         );
 
         this.gameSpeed = new GameSpeed();
-        this.invincibleMode = new InvincibleMode();
         this.playerState = new PlayerState();
         this.uiFont = new Font(
             gameProps.getProperty("text.font"),
@@ -231,7 +238,7 @@ public class ShadowAliens extends AbstractGame {
         enemiesSpawnedThisWave = 0;
 
         Powerups[] wavePowerups = gameResetter.resetPowerups(currentWave);
-        for (Powerups p : wavePowerups) {
+        for(Powerups p : wavePowerups) {
             powerUps.add(p);
         }
     }
@@ -309,11 +316,11 @@ public class ShadowAliens extends AbstractGame {
         time = 0;
         accumulatedTime = 0;
         score = 0;
+        waveStartTime = 0;
         currentWave = 1;
         inWave = false;
         gameState = GameState.START;
         gameSpeed.reset();
-        invincibleMode.reset();
         playerState.reset();
 
         totalEnemiesThisWave = 0;
@@ -388,26 +395,6 @@ public class ShadowAliens extends AbstractGame {
         }
 
 
-        /* if (gameSpeed.isPaused()) {
-            drawGameState();
-            battleScreen.draw(screenWidth);
-            pauseScreen.updateTimescale(gameSpeed.getTimeScale());
-            pauseScreen.draw(screenWidth);
-            return;
-        }
-        
-        // Game update with timescale
-        double multiplier = gameSpeed.getMultiplier();
-        accumulatedTime += multiplier;
-        
-        while (accumulatedTime >= 1.0) {
-            time++;
-            updateGameLogic(input);
-            accumulatedTime -= 1.0;
-        }
-        
-        drawGameState();
-        battleScreen.draw(screenWidth); */
     }
 
     private void updateStart(Input input) {
@@ -417,12 +404,14 @@ public class ShadowAliens extends AbstractGame {
     if (input.wasPressed(Keys.SPACE)) {
         gameState = GameState.BATTLE;
         inWave = true;
+        waveStartTime = time;
         time = 0;
-        accumulatedTime = 0;
+        accumulator = 0.0;
     }
 }
 
     private void updateBattle(Input input) {
+       
         // Check lose condition
         if (player.getHealth() <= 0) {
             endScreenSetup(false);
@@ -438,6 +427,7 @@ public class ShadowAliens extends AbstractGame {
         
             if (currentWave < gameResetter.getTotalWaves()) {
                 currentWave++;
+                waveStartTime = time;
                 enemy = gameResetter.resetEnemies(currentWave);
                 powerUps.clear();
                 Powerups[] wavePowerups = gameResetter.resetPowerups(currentWave);
@@ -456,28 +446,6 @@ public class ShadowAliens extends AbstractGame {
         }
         
         
-        /* // Check if wave is complete
-        if (allEnemiesAndProjectilesDestroyed() && inWave && time > 0) {
-            inWave = false;
-            score += Integer.parseInt(gameProps.getProperty("score.waveCompleted"));
-            
-            if (currentWave < gameResetter.getTotalWaves()) {
-                currentWave++;
-                enemy = gameResetter.resetEnemies(currentWave);
-                powerUps.clear();
-
-                Powerups[] wavePowerups = gameResetter.resetPowerups(currentWave);
-                for (Powerups p : wavePowerups) {
-                    powerUps.add(p);
-                }
-                playerProjectiles.clear();
-                enemyProjectiles.clear();
-                battleScreen.setCurrentWave(currentWave);
-                inWave = true;
-            }
-            return;
-        } */
-        
         // Pause toggle
         if (input.wasPressed(Keys.ESCAPE)) {
             gameState = GameState.PAUSED;
@@ -485,20 +453,25 @@ public class ShadowAliens extends AbstractGame {
             return;
         }
         
-        // Speed controls
-        if (input.wasPressed(Keys.G)) gameSpeed.increase();
-        if (input.wasPressed(Keys.F)) gameSpeed.decrease();
-        if (input.wasPressed(Keys.I)) invincibleMode.toggle();
+        // Wave controls
         if (input.wasPressed(Keys.N)) handleNextWaveCommand();
         
         // Game logic with timescale
+        long now = System.nanoTime();
+        double elapsed = (now - lastUpdateTime) / 1_000_000_000.0; // seconds since last frame
+        lastUpdateTime = now;
+
         double multiplier = gameSpeed.getMultiplier();
-        accumulatedTime += multiplier;
+        accumulator += elapsed * TICKS_PER_SECOND * multiplier;
+
+        if (accumulator > 5.0) {
+            accumulator = 5.0;
+        }
         
-        while (accumulatedTime >= 1.0) {
+        while (accumulator >= 1.0) {
             time++;
             updateGameLogic(input);
-            accumulatedTime -= 1.0;
+            accumulator -= 1.0;
         }
         
         // Draw battle
@@ -515,10 +488,6 @@ public class ShadowAliens extends AbstractGame {
             gameSpeed.togglePause();
             return;
         }
-        
-        // Speed controls work in pause
-        if (input.wasPressed(Keys.G)) gameSpeed.increase();
-        if (input.wasPressed(Keys.F)) gameSpeed.decrease();
         
         // Draw frozen game state
         drawGameState();
@@ -560,7 +529,7 @@ public class ShadowAliens extends AbstractGame {
             gameSpeed.decrease();
         }
         if (input.wasPressed(Keys.I)) {
-            invincibleMode.toggle();
+            playerState.toggleDevInvincibility();
         }
         if (input.wasPressed(Keys.R)) {
             resetGame();
@@ -585,6 +554,7 @@ public class ShadowAliens extends AbstractGame {
         // Move to next wave
         if (currentWave < gameResetter.getTotalWaves()) {
             currentWave++;
+            waveStartTime = time;
             enemy = gameResetter.resetEnemies(currentWave);
 
             Powerups[] wavePowerups = gameResetter.resetPowerups(currentWave);
@@ -602,6 +572,7 @@ public class ShadowAliens extends AbstractGame {
     
     private void updateGameLogic(Input input) {
         player.movement(input);
+        int relativeTime = time - waveStartTime;
 
         // bounds for the player
         if(player.getX() < PLAYER_BOUND_WIDTH / 2){
@@ -614,8 +585,14 @@ public class ShadowAliens extends AbstractGame {
         // Update enemies
         for (Enemy e : enemy) {
             if (e == null) continue;
-            e.update(time);
             
+            if (e.isExploding()) {
+                e.updateExplosion(time);
+                e.draw();
+                continue;
+            } 
+
+            e.update(relativeTime);
 
             if (e.isSpawned() && e.getY() > screenHeight) {
                 e.despawned();
@@ -626,35 +603,32 @@ public class ShadowAliens extends AbstractGame {
             }
     
             if (!e.wasSpawnedLastFrame() && e.isSpawned()) {
-            enemiesSpawnedThisWave++;
+                enemiesSpawnedThisWave++;
             }
-            if (e.isExploding()) {
-                e.updateExplosion(time);
-                e.draw();
-            } else {
-                e.update(time);
-                if (e.isSpawned()) {
-                    Collision playerEnemyCollision = new Collision(player, e);
-                    if (playerEnemyCollision.checkCollision() && !playerState.isInvincible(time)) {
-                        player.livesLost();
-                        score -= Integer.parseInt(gameProps.getProperty("score.gotHit"));
-                        score = Math.max(0, score);
-                        playerState.startInvincibility(time, gameResetter.getPlayerHitInvincibilityTime());
-                        e.triggerExplosion(time);
-                    }
+            
+                
+            if (e.isSpawned()) {
+                Collision playerEnemyCollision = new Collision(player, e);
+                if (playerEnemyCollision.checkCollision() && !playerState.isInvincible(time)) {
+                    player.livesLost();
+                    score -= Integer.parseInt(gameProps.getProperty("score.gotHit"));
+                    score = Math.max(0, score);
+                    playerState.startInvincibility(time, gameResetter.getPlayerHitInvincibilityTime());
+                    e.triggerExplosion(time);
                 }
+            }
 
-                if (e.getType().equals("SHOOTING")) {
-                    e.updateProjectiles(time);
-                    // Add enemy projectiles to the main list
-                }
+            if (e.getType().equals("SHOOTING")) {
+                e.updateProjectiles(relativeTime);
+                // Add enemy projectiles to the main list
             }
+            
         }
         
         // Update powerups
         for (int i = powerUps.size() - 1; i >= 0; i--) {
             Powerups p = powerUps.get(i);
-            p.update(time);
+            p.update(relativeTime);
             
             if (p.getY() > screenHeight) {
                 powerUps.remove(i);
@@ -668,6 +642,7 @@ public class ShadowAliens extends AbstractGame {
                     activatePowerup(p);
                     score += Integer.parseInt(gameProps.getProperty("score.gotPowerup"));
                     p.despawned();
+                    powerUps.remove(i);
                 }
             }
         }
@@ -748,7 +723,8 @@ public class ShadowAliens extends AbstractGame {
             EnemyProjectile ep = enemyProjectiles.get(i);
             
             Collision playerEnemyProjecileCollision = new Collision(player, ep);
-            if (playerEnemyProjecileCollision.checkCollision() && !playerState.isInvincible(time)) {
+            if (playerEnemyProjecileCollision.checkCollision() && !playerState.isInvincible(time) ) {
+                
                 player.livesLost();
                 score -= Integer.parseInt(gameProps.getProperty("score.gotHit"));
                 score = Math.max(0, score);
@@ -848,7 +824,7 @@ public class ShadowAliens extends AbstractGame {
          // Draw invincibility overlay if active
         if (playerState.isInvincible(time) || playerState.isDevInvincibilityActive()) {
             // Draw invincibility image overlay
-            String invincibilityImage = gameProps.getProperty("invincibility.image");
+            invincibilityImage.draw(player.getX(), player.getY());
             // You'll need to load and draw this image
         }
         

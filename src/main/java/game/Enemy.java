@@ -152,9 +152,7 @@ public class Enemy extends NonPlayerEntity {
         projectiles.add(newProjectile);
     }
     
-    /* public void setProjectileImage(String imagePath, int speed) {
-        EnemyProjectile.setProjectileProperties(imagePath, speed);
-    } */
+    
     @Override
     public void draw(){
         drawExplosion();
