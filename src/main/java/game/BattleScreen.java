@@ -36,10 +36,10 @@ public class BattleScreen extends Screen{
     public void draw(double screenWidth) {
         setFontSize(size);
         // Draw wave
-        font.drawString(text + currentWave, posX, posY, textColor);
+        font.drawString(text + ' ' + currentWave, posX, posY, textColor);
         
         // Draw score
-        font.drawString(scoreText + score, scoreX, scoreY, textColor);
+        font.drawString(scoreText + ' ' + score, scoreX, scoreY, textColor);
     }
 
 }

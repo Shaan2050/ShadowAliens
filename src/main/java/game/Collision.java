@@ -4,7 +4,7 @@ import bagel.util.Point;
 import bagel.util.Rectangle;
 
 public class Collision{
-    private Rectangle rect1;
+    private final Rectangle rect1;
     private final Rectangle rect2;
 
     public Collision(Player player, Enemy enemy){

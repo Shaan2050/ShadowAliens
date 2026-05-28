@@ -55,7 +55,7 @@ public class Powerups extends NonPlayerEntity{
     public int getRemainingDuration(int currentTime) {
         if (activationTime == -1) return 0;
         int remaining = duration - (currentTime - activationTime);
-        return Math.max(0, remaining);
+        return Math.max(0, remaining); // Ensure it doesn't return negative
     }
 
     public double getX() {

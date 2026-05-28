@@ -5,7 +5,6 @@ import java.util.Properties;
 
 import bagel.AbstractGame;
 import bagel.DrawOptions;
-import bagel.Font;
 import bagel.Image;
 import bagel.Input;
 import bagel.Keys;
@@ -18,14 +17,10 @@ public class ShadowAliens extends AbstractGame {
     private final Image invincibilityImage;
 
     private static final int PLAYER_BOUND_WIDTH = 50;
-    private static final int PLAYER_BOUND_HEIGHT = 50;
 
     private static final double TICKS_PER_SECOND = 60.0;
     private double accumulator = 0.0;
     private long lastUpdateTime = System.nanoTime();
-
-    private int enemiesSpawnedThisWave = 0;
-    private int totalEnemiesThisWave = 0;
     private int waveStartTime = 0;
 
     private Player player;
@@ -39,10 +34,10 @@ public class ShadowAliens extends AbstractGame {
     private final GameSpeed gameSpeed; 
     private final GameResetter gameResetter;
 
-    private ScreenManager screenManager;
-    private StartScreen startScreen;
-    private PauseScreen pauseScreen;
-    private BattleScreen battleScreen;
+    private final ScreenManager screenManager;
+    private final StartScreen startScreen;
+    private final PauseScreen pauseScreen;
+    private final BattleScreen battleScreen;
     private EndScreen endScreen;
 
     private enum GameState {
@@ -54,16 +49,10 @@ public class ShadowAliens extends AbstractGame {
 
     private GameState gameState;
     
-    private final Font uiFont;
     private final DrawOptions textColor;
-    private final String waveText;
-    private final double waveX, waveY;
-    private final String scoreText;
-    private final double scoreX, scoreY;
     private int score = 0;
 
     private static int time = 0;
-    private double accumulatedTime = 0;
     private boolean inWave = false;
     private boolean waveStarted = false;
 
@@ -103,20 +92,7 @@ public class ShadowAliens extends AbstractGame {
 
         this.gameSpeed = new GameSpeed();
         this.playerState = new PlayerState();
-        this.uiFont = new Font(
-            gameProps.getProperty("text.font"),
-            Integer.parseInt(gameProps.getProperty("text.size"))
-        );
         
-        this.waveText = gameProps.getProperty("wave.text");
-        String[] wavePos = gameProps.getProperty("wave.pos").split(",");
-        this.waveX = Double.parseDouble(wavePos[0]);
-        this.waveY = Double.parseDouble(wavePos[1]);
-        
-        this.scoreText = gameProps.getProperty("score.text");
-        String[] scorePos = gameProps.getProperty("score.pos").split(",");
-        this.scoreX = Double.parseDouble(scorePos[0]);
-        this.scoreY = Double.parseDouble(scorePos[1]);
         
         //Start Screen
         String fontFile = gameProps.getProperty("text.font");
@@ -234,13 +210,13 @@ public class ShadowAliens extends AbstractGame {
         // Initialize game objects using GameResetter
         this.player = gameResetter.resetPlayer();
         this.enemy = gameResetter.resetEnemies(1);
-        totalEnemiesThisWave = enemy.length;
-        enemiesSpawnedThisWave = 0;
 
         Powerups[] wavePowerups = gameResetter.resetPowerups(currentWave);
         for(Powerups p : wavePowerups) {
             powerUps.add(p);
         }
+
+        battleScreen.setCurrentWave(currentWave);
     }
 
     // End Screen setup
@@ -314,7 +290,6 @@ public class ShadowAliens extends AbstractGame {
     
     private void resetGame() {
         time = 0;
-        accumulatedTime = 0;
         score = 0;
         waveStartTime = 0;
         currentWave = 1;
@@ -323,8 +298,6 @@ public class ShadowAliens extends AbstractGame {
         gameSpeed.reset();
         playerState.reset();
 
-        totalEnemiesThisWave = 0;
-        enemiesSpawnedThisWave = 0;
         waveStarted = false;
 
         
@@ -355,26 +328,6 @@ public class ShadowAliens extends AbstractGame {
     protected void update(Input input) {
         // Handle global controls
         handleGlobalControls(input);
-        
-        /* if (player.getHealth() <= 0) {
-            endScreenSetup(false);
-            return;
-        }
-
-        if(allEnemiesAndProjectilesDestroyed()){
-            if(inWave){
-                
-                if(currentWave > gameResetter.getTotalWaves()){
-                    endScreenSetup(true);
-                    return;
-                }else{
-                    currentWave++;
-                    enemy = gameResetter.resetEnemies(currentWave - 1);
-                    inWave = true;
-                }
-            }
-            
-        } */
 
         switch (gameState) {
             case START:
@@ -601,10 +554,6 @@ public class ShadowAliens extends AbstractGame {
             if (e.isSpawned() && !waveStarted) {
                 waveStarted = true;
             }
-    
-            if (!e.wasSpawnedLastFrame() && e.isSpawned()) {
-                enemiesSpawnedThisWave++;
-            }
             
                 
             if (e.isSpawned()) {
@@ -793,25 +742,6 @@ public class ShadowAliens extends AbstractGame {
         }
 
         return true;
-    }
-
-    private void loadWave(int waveNum) {
-        currentWave = waveNum;
-        waveStarted = false;
-
-        enemy = gameResetter.resetEnemies(currentWave);
-        totalEnemiesThisWave = enemy.length;
-        enemiesSpawnedThisWave = 0;
-        
-        powerUps.clear();
-        Powerups[] wavePowerups = gameResetter.resetPowerups(currentWave);
-        for (Powerups p : wavePowerups) {
-            powerUps.add(p);
-        }
-        playerProjectiles.clear();
-        enemyProjectiles.clear();
-        battleScreen.setCurrentWave(currentWave);
-        inWave = true;
     }
     
     private void drawGameState() {

@@ -6,18 +6,16 @@ import bagel.Image;
 
 public class Enemy extends NonPlayerEntity {
     public static Image explosionImage;
-    private String projectileImage;
     private final String type;
     private boolean explosion = false;
     private int explosionStart;
     public static int explosionDuration;
-    private int projectileSpeed;
     private boolean wasSpawned = false;
 
 
      // For strafing enemies
     private double xDirection = 0; // -1 for left, 1 for right
-    private boolean hasInitializedDirection = false;
+    private boolean hasInitialisedDirection = false;
     
     // For shooting enemies
     private int lastShotTime = -1;
@@ -71,6 +69,7 @@ public class Enemy extends NonPlayerEntity {
         y = -100;
     }
 
+    @Override
     public boolean isSpawned() {
         return isSpawned && active;
     }
@@ -109,8 +108,8 @@ public class Enemy extends NonPlayerEntity {
 
      private void updateStrafing() {
         // Initialize direction on first spawn
-        if (!hasInitializedDirection && isSpawned) {
-            hasInitializedDirection = true;
+        if (!hasInitialisedDirection && isSpawned) {
+            hasInitialisedDirection = true;
             // Determine which edge is closer
             double distToLeft = x;
             double distToRight = ShadowAliens.screenWidth - x;
@@ -157,7 +156,7 @@ public class Enemy extends NonPlayerEntity {
     public void draw(){
         drawExplosion();
         if(isSpawned && active){
-            image.drawFromTopLeft(x, y);
+            image.draw(x, y);
         }
     }
 
