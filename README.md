@@ -1,5 +1,38 @@
 # Shadow Aliens
 
+
+## About
+Shadow Aliens is a 2D space shooter game built in Java using the Bagel game library. The player controls a spaceship defending against waves of alien invaders, each wave introducing new enemy types with unique behaviours.
+
+The game begins with a start screen where the player can move their ship before pressing SPACE to begin. During battle, the player navigates left and right using A and D keys while firing projectiles upward with the SPACE bar to destroy descending enemies. The player starts with three lives and loses one each time an enemy ship collides with them.
+
+Enemies arrive in waves, with three distinct types: Regular enemies move straight down, Strafing enemies bounce horizontally off screen edges while descending, and Shooting enemies fire projectiles back at the player. Powerups occasionally appear—collecting them grants temporary shields, extra lives, reduced shooting cooldown, or increased movement speed.
+
+The player can manipulate game speed by pressing G to increase or F to decrease the timescale. Pressing I toggles invincibility mode, and ESC pauses the action, displaying current controls and timescale. The R key resets the game at any time.
+
+Score increases by destroying enemies (with bonus points for different types), collecting powerups, and completing waves. Score decreases when the player takes damage. The game ends in victory after all waves are cleared, or in defeat if all lives are lost. An end screen displays the outcome with an option to play again.
+
+###Features
+-Multiple Enemy Types: Regular, Strafing (wall-bouncing), and Shooting (firing projectiles)
+
+-Wave Progression: Increasing difficulty across multiple enemy waves
+
+-Powerup System: Shield, Life, Cooldown reduction, and Engine speed boost
+
+-Time Manipulation: Increase or decrease game speed at will
+
+-Invincibility Mode: Toggle god mode for testing or casual play
+
+-Pause System: Freeze gameplay with controls display and timescale indicator
+
+-Score Tracking: Points awarded for enemy destruction, powerup collection, and wave completion
+
+-Persistent UI: Wave number, score, and remaining lives displayed during battle
+
+-Screen States: Start screen, battle screen, pause overlay, and win/lose end screens
+
+Dynamic Configuration: All game settings loaded from external properties file
+
 ## Running Instructions
 **NOTE:** This project was completed and tested in Visual Studio Code hence, there are also instructions for running it there.
 ### IntelliJ IDEA
@@ -24,9 +57,7 @@ The game accepts a custom properties file via JVM argument:
 - **Argument**: `-DgameData="path/to/file.properties"`
 - **Default**: If not provided, uses `gameData.properties` in the working directory
 - **Error Handling**: If the file is not found, prints "Error with {file path}" and exits with code -1
-## Assumptions
-None
-* 
+
 
 ## AI Statement
 I acknowledge the use of DeepSeek [chat.deepseek.com] in helping me fix runtime errors.
@@ -56,5 +87,3 @@ The following files were provided by the teaching staff:
 
 Inside ShadowAliens.java, skeletal code was provided:the main function, ShadowAliens class and the constructor initialised the screen.
 The bagel library was also provided by the teaching staff. All other files, design choices and implementation were done by me.
-
-* 
