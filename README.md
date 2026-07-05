@@ -1,5 +1,3 @@
-# SWEN20003 Semester 1, 2026
-# Project 1
 # Shadow Aliens
 
 ## Running Instructions
@@ -34,9 +32,6 @@ None
 I acknowledge the use of DeepSeek [chat.deepseek.com] in helping me fix runtime errors.
 
 I used the error outputs to ask DeepSeek what it means and revised my code accordingly.
-## Code References
-
-* 
 
 ## Design Report
 
@@ -53,6 +48,13 @@ This project still maintained its core principles of achieving modularity and co
 
 However, the modulation done in this project has made the main ShadowAliens file very long and quite tedious to follow. Further addition to this project will complicate ShadowAliens even further unless the class itself is divided to handle specific parts of the game. For example, one class will only handle updating entities, one class to handle loading all data and properties and so on. These classes would depend on abstraction rather than concrete classes.
 
-## Design Report References
+## ACKNOWLEDGEMENTS
+This project was completed as part of a university project in the course SWEN20003 at the University of Melbourne.
+The following files were provided by the teaching staff:
+- IOUtils.java
+- ShadowAliens.java
+
+Inside ShadowAliens.java, skeletal code was provided:the main function, ShadowAliens class and the constructor initialised the screen.
+The bagel library was also provided by the teaching staff. All other files, design choices and implementation were done by me.
 
 * 
